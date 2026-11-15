@@ -29,19 +29,38 @@ the skill they belong to.
 `plugin-install.sh` installs the plugin for Claude Code and Codex. Both CLIs read this
 directory as a local marketplace (`.claude-plugin/marketplace.json`).
 
+Once, from this repository, put the script on PATH (a link in `~/.local/bin`, so it always
+finds this repository and stays current with it):
+
 ```sh
-./plugin-install.sh                  # every CLI found on PATH (claude, codex)
-./plugin-install.sh --claude         # Claude Code only
-./plugin-install.sh --codex          # Codex only
-./plugin-install.sh --claude --scope project   # Claude Code, this project only
-./plugin-install.sh --uninstall      # remove it again (combine with --claude/--codex)
+./plugin-install.sh setup            # links ~/.local/bin/plugin-install.sh
+./plugin-install.sh setup --uninstall
 ```
 
+Then, from any directory, it installs into **that directory** by default:
+
+```sh
+cd ~/my-board
+plugin-install.sh                    # every CLI found on PATH (claude, codex)
+plugin-install.sh claude             # Claude Code only (or --claude)
+plugin-install.sh codex              # Codex only (or --codex)
+plugin-install.sh --user             # for the user, in every directory
+plugin-install.sh claude --scope local   # Claude Code, this directory, not committed
+plugin-install.sh --uninstall        # remove it again (same target and scope options)
+```
+
+| | this directory (default: `--scope project`) | `--user` |
+|---|---|---|
+| **Claude Code** | enabled in `./.claude/settings.json` (`local`: `settings.local.json`), loaded in place from this repository | the same, in the user's settings |
+| **Codex** | skills copied into `./.agents/skills/` (Codex has no project-scoped plugins) | plugin copied under `$CODEX_HOME/plugins/cache/` |
+
 - **Claude Code** loads the plugin in place: edits to the skills take effect at the next
-  session start, or after `/reload-plugins`.
-- **Codex** installs a copy under `$CODEX_HOME/plugins/cache/`: run the script again after
-  editing the skills.
-- Running it again is safe; it re-adds the marketplace and reinstalls.
+  session start, or after `/reload-plugins`. Keep this repository where it is: the installs
+  point at it.
+- **Codex** always uses a copy: run the script again after editing the skills.
+- Running it again is safe; it re-adds the marketplace and reinstalls. It refuses a
+  project install in the home directory (there `./.claude/settings.json` is the user file:
+  use `--user`), and a Codex project install into this repository itself.
 
 By hand, the same thing is:
 
