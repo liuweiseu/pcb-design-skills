@@ -1,0 +1,8 @@
+{
+  "name": "pcb-design",
+  "version": "0.1.0",
+  "description": "Rules for designing generated KiCad boards that JLCPCB builds and that work first time: schematics, layout, silkscreen, parts and ordering, bring-up, KiCad scripting, RF, fast digital and power. Distilled from CLAUDE_PCB.md.",
+  "author": { "name": "gallicchio" },
+  "license": "CERN-OHL-P-2.0",
+  "keywords": ["pcb", "kicad", "jlcpcb", "electronics", "hardware"]
+}

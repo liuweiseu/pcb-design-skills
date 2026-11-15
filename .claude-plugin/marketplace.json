@@ -1,0 +1,17 @@
+{
+  "name": "pcb-design",
+  "owner": { "name": "gallicchio" },
+  "metadata": {
+    "description": "Local marketplace for the pcb-design plugin",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "pcb-design",
+      "source": "./",
+      "description": "PCB design rules for generated KiCad boards built by JLCPCB, as skills",
+      "version": "0.1.0",
+      "category": "development"
+    }
+  ]
+}
