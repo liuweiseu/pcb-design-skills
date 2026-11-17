@@ -14,7 +14,8 @@ the part that does the least, at a sensible price (Rosenberg). Related skills:
 
 Reference files:
 - `references/power-current-thermal.md`: IPC-2221 widths, copper resistance, vias, 2 oz
-  copper, heatsink checks, hot-plug ringing, input protection, switching converters,
+  copper, heatsink checks, hot-plug ringing, input protection, the bench input's drop,
+  switching regulators' constant power, switching converters,
   current sensing, gate drive, rail budgets. Read when sizing any power path or heatsink.
 - `references/pcb-coils-magnetics.md`: planar spiral inductance (Mohan), skin depth, Q and
   link efficiency, coil heating, coils as sensors, plane voids, L/R and PWM ripple, loop
@@ -24,8 +25,8 @@ Reference files:
   (linear driver into a stall, PTC hold/trip, fuse position, split-rail clamps, series
   diode coupling, class-B current limiter). Read before deciding a fuse, PTC, clamp or
   current limit.
-- `references/parts-notes.md`: part-specific facts (LM358 swing, motor resistance, fader
-  tapers, slide-switch travel, ECW-F film cap, JLCPCB basic 0402 codes, package hunting,
+- `references/parts-notes.md`: part-specific facts (LM358 swing, OPA1612 slew rate,
+  FT2232H supply pins, motor resistance, fader tapers, slide-switch travel, ECW-F film cap, JLCPCB basic 0402 codes, package hunting,
   DIP switch ratings, bus sharing). Read when choosing a specific part or package.
 
 ## Capacitors
@@ -80,6 +81,10 @@ Reference files:
   above the peak current (not the average), shielded where neighbours are sensitive. For RF
   matching and filters, simulate with the maker's model including Q, and keep the SRF well
   above the frequency of use, or the inductor is a capacitor.
+- **Switching regulators draw about constant power, so their input current falls as the
+  input rises** (ECP5-2ADC-2DAC board A, 2026-11-16: 0.388 A at 4.0 V, 0.369 A at 5.0 V).
+  Budget the input current at the lowest input voltage, and judge a power-up staircase by
+  V x I, not by the current.
 - **Linear regulators:** dissipation is (Vin max - Vout) x I max, at the highest ambient
   inside the enclosure. ECP5's ADC LDO was 0.36-0.45 W in a SOT-23-5 (187 C/W): 110-129 C
   in a 45 C box. A resistor ahead of it shares the drop and filters the input (2.2 ohm 1206:
@@ -89,6 +94,16 @@ Reference files:
   comes from the copper the part sits on, not the datasheet's test board.
 - **Model an LM358-class output 2 V from each rail** (TI: V+ - 2 V typical, V+ - 3 V
   guaranteed; sinks mA only ~2 V above V-).
+- **Choose every amplifier in a converter's path by slew rate as well as noise:**
+  full-power bandwidth is SR / (2 pi V_peak), and it must cover the band the converter is
+  sold for. ECP5-2ADC-2DAC's OPA1612 (27 V/us, 4 MHz full-power bandwidth at 1 V pk-pk) in
+  front of a 65 MS/s ADC compressed above 150 mV and its harmonics climbed to -26 dBc at
+  11 MHz (board A, 2026-11-16; `references/parts-notes.md`; the rule in full is in the
+  analog-signals skill).
+- **Read every supply pin's range, and what an internal regulator may feed, before
+  trusting a reference design or a note:** the FT2232H's VPHY and VPLL need 3.0-3.6 V; its
+  1.8 V VREGOUT feeds only the core (ECP5-2ADC-2DAC rev A's USB port was dead on arrival,
+  2026-11-16; `references/parts-notes.md`; the netlist check is in pcb-schematic).
 - **A push-pull output cannot share a bus:** read "high impedance when deselected" in the
   datasheet before sharing any SPI output (MT6701's DO needed a 74LVC1G125, §26).
 - **A DIP switch is for milliamps** (contacts rated tens of mA): switch a reference resistor
@@ -129,6 +144,11 @@ Reference files:
   electrolytic/polymer, clamp with a TVS.
 - **Protect the input:** reverse polarity (P-MOSFET or ideal diode, not a series
   Schottky), overcurrent (fuse/PTC/eFuse below what copper and connector survive), a TVS.
+- **Budget the bench input from the supply's terminals to the rail, at full load**
+  (ECP5-2ADC-2DAC board A, 2026-11-16: 5.00 V at the supply was 4.22 V on +5V at 0.385 A,
+  through a BNC cable, a 0.1" header, an SS34 and a PTC, with the FPGA unconfigured). A
+  bench input gets a connector that takes real leads, an ideal-diode FET where the drop
+  matters, and a rail window the board's own drop fits inside.
 - **Inductive loads** need a freewheel path; expect regeneration ("supply pumping").
 - **Switching converters:** the datasheet's layout is the layout; small hot loop.
 - **Current sensing:** Kelvin connection, sense pair, RC filter; mind low- vs high-side.

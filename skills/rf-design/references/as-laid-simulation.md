@@ -154,7 +154,9 @@ design review from the written board.
       path.
   - **The rule still stands:** separate islands for transmit and receive, each through its own
     ferrite and capacitors. A stack with the supply far from any ground would have made rev A's
-    plane a real path. The layer under a relief window is ground, not a supply.
+    plane a real path. The layer under a relief window is ground, not a supply. Do not count on the
+    stack to rescue the next board: rev B puts ground on In2 under the RF chains (REVB 10, 54; the
+    first rule in SKILL.md, "Ground, not a supply plane, under every RF chain", the user, 2026-11-04).
 - **The as-laid simulation's own lessons** (CostasLink rev A, `sim/aslaid/REPORT.md`):
   - **Count the pads' capacitance on a thin dielectric.** An 0402 pad 0.21 mm over its plane is about
     0.08 pF. Eight DC blocks, the shunts and the tees on rev A's receive chain cost about 2 dB at

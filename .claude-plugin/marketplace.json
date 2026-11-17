@@ -1,6 +1,6 @@
 {
   "name": "pcb-design",
-  "owner": { "name": "gallicchio" },
+  "owner": { "name": "Wei Liu" },
   "metadata": {
     "description": "Local marketplace for the pcb-design plugin",
     "version": "0.1.0"

@@ -1,4 +1,4 @@
-# Other tooling: scripted edits, renames, datasheets, data sources, FPGA builds
+# Other tooling: scripted edits, renames, datasheets, data sources, build environments, FPGA builds
 
 ## Scripted edits of source files
 
@@ -66,6 +66,22 @@
   (AMOD/RF-MOD, 2026-10-29). Pairing names by it made the PAM8302's pin 2 read IN- and its
   pin 8 NC. The printed number is the pin group's numeric text; use that when the two
   differ. (Pin and rotation checks against EasyEDA data are in `jlcpcb-order`.)
+
+## Build environments: the bench PC's `PATH` hides the system's tools behind a vendor's (GPiBridge, 2026-11-15)
+
+- **What happened:** on the bench PC, Vitis 2022.1 puts its own CMake 3.3.2 (which no longer
+  starts: it wants `libidn.so.11`) and its own `arm-none-eabi-gcc` 11 ahead of `/usr/bin`, so
+  the firmware build picked up the vendor's tools, not the system's.
+- **A build script must name what it uses:**
+  - put `/usr/bin` first in the environment it gives CMake;
+  - pass the toolchain's place explicitly (`-DPICO_TOOLCHAIN_PATH=/usr` for the Pico SDK);
+  - build into `build-<hostname>/`, since a CMake cache remembers the folder it was made in
+    and a cache made on another machine breaks the build.
+- **Tools installed for a bring-up go in the user's own prefix (`.local` in the home
+  directory) with names that shadow nothing:** `openocd-xpack` (an OpenOCD that knows the
+  RP2350) sits beside the system's `openocd`, which another project's scripts call.
+- See also "Let an explicit tool path win" in SKILL.md (KiCad 9's `kicad-cli` in /usr/bin
+  beating the AppImage on reviewers' machines).
 
 ## FPGA builds: Vivado drops the tristates inside an IP Integrator module reference (CostasLink rev A, 2026-10-29)
 

@@ -36,6 +36,35 @@ board teaches one the hard way, rewrite it with the board's citation.
 | KiCad 10, pcbnew Python, kicad-cli, ngspice, tooling quirks | `kicad-scripting` |
 | fast digital: clocks, DDR, differential pairs, escape | `highspeed-digital` |
 | RF: CPWG, launches, matching, stitching | `rf-design` |
+| accurate analog: ADC/DAC paths, references, tuning voltages, high-impedance nodes; ground under them, amplifier slew | `analog-signals` |
+
+## Two checks no board ships without, and a third (ECP5-2ADC-2DAC, 2026-11-16)
+
+ECP5-2ADC-2DAC rev A went to JLCPCB with **its USB programming port dead**, after the author's
+pin audit and five LLM reviews in two rounds had all passed it. The FT2232H's VPHY and VPLL got
+1.8 V where its data sheet says 3.0-3.6 V, and its D+ and D- were swapped. With no JTAG and no
+UART, nothing on the board could be tested until it was reworked by hand. Both faults were plain
+in the netlist against the data sheet's pin table. These checks are **scripts that fail the
+build**, run on every build (gate 2, 2a-2d), and every review brief asks the reviewers to redo
+them from the data sheets (`pcb-design-review` skill).
+
+1. **Every power pin of every IC, by voltage,** against a pin table transcribed from its data
+   sheet (gate 2a).
+2. **Every pair's polarity, connector to chip,** by pin function through every in-line part
+   (gate 2b).
+3. **Every connector that follows a standard, against the standard's drawing, from the placed
+   pads** (gate 2d): ECP5-2ADC-2DAC's Pmod sockets were mirrored end to end with a correct
+   netlist, which neither of the first two checks can see.
+
+- **Parts that are not fitted are checked both ways** (the user, 2026-11-16): as built, and with
+  each DNP part fitted; diode paths and low-ohm ties between rails fail too.
+- **A schematic note, a generator comment or "verified" in a review brief is not evidence.** A
+  claim of "checked" names the script and its output file.
+
+How each check works, with the tools and the cases behind it: see the `pcb-schematic` skill,
+references/netlist-checks.md, "The pin audit"; the gate:
+[references/verification-gates.md](references/verification-gates.md), gate 2; dual-row and
+right-angle headers: the `pcb-layout` skill's ten steps (references/dual-row-headers.md).
 
 ## 1. How the user works with you
 
@@ -53,6 +82,25 @@ board teaches one the hard way, rewrite it with the board's citation.
 - **"Go all night".** Keep going, log progress in the chat as you go, and write findings
   down before a session or the power could die (GPSDO r28). Do not stop to ask what you can
   decide; record the decision and why.
+- **Your own background processes: never find them by a pattern your command contains** (the
+  user, 2026-11-04: "a recurring problem"). The Bash tool runs each command as
+  `bash -c '<the whole command>'`, so `pgrep -f X`, `pkill -f X` and `ps aux | grep X` match the
+  shell running them. A waiter `while pgrep -f "night.py gaps"` matched itself and sat out its
+  whole timeout an hour after the test had ended; `pgrep -f ... | tail -1` returned a pipeline
+  helper, so the waiter on it returned at once; `pkill -f X` kills its own shell and anything
+  else sharing X. (The project's root `CLAUDE.md` has these rules in full.)
+  1. **Take the PID at launch:** a simple background command with its output to a file,
+     `python3 run.py > run.log 2>&1 & echo $! > run.pid`. `$!` of a pipeline is its last command
+     (`... | grep > log &` gives grep's) and of `cd d && python3 run.py &` a subshell (both tested
+     2026-11-04), so neither pipe a long run nor background a list.
+  2. **If you must search, anchor the pattern** to the program's own command line, which a
+     shell's (`/bin/bash -c ...`) cannot match: `pgrep -f '^python3 night.py gaps'`, then
+     `ps -o pid,lstart,args -p <pids>` before trusting it. Not the bracket trick (`[n]ight.py`):
+     it fails when the plain name appears elsewhere in the same command.
+  3. **Wait on a verified PID** (`tail --pid=<pid> -f /dev/null`, or `while kill -0 <pid>`),
+     never on a `pgrep` loop.
+  4. **Never `pkill -f` or `killall` by pattern:** kill the one PID `ps` has just shown; a task
+     the harness started is stopped with TaskStop.
 - **Be opinionated.** Recommend, with the trade-off stated; do not survey options you will
   not pursue (GPSDO P14).
 - **Self-critical review.** End with the most likely causes of a dead-on-arrival board and
@@ -238,14 +286,17 @@ Detail, audits and worked examples for this section:
 
 ## 3. Verification gates (run them every build)
 
-Before calling a schematic, PCB or release done, pass every gate. The full list (32 gates,
+Before calling a schematic, PCB or release done, pass every gate. The full list (33 gates,
 with the numbers, tools and rev A failures behind each) is in
 [references/verification-gates.md](references/verification-gates.md); read it before any
 release, order or "is it ready?" question. In short:
 
-1-4. ERC clean with the netlist exported; every symbol pin against the datasheet figure; a
-path trace of every signal, rail, clock and strap; no overlaps on schematic sheets (code,
-`pdftotext -bbox`, eye).
+1-4. ERC clean with the netlist exported; every symbol pin against the datasheet figure, and
+**scripts that fail the build** (ECP5-2ADC-2DAC rev A failed 2a and 2b and lost its USB port):
+2a power pins by voltage, 2b pair polarity connector to chip, 2c pin numbers by function, 2d
+standard connectors against the standard's drawing, with DNP parts checked fitted and unfitted
+(the block above); a path trace of every signal, rail, clock and strap; no overlaps on
+schematic sheets (code, `pdftotext -bbox`, eye).
 5-6. DRC at least as strict as the fab's, 0 errors and 0 unconnected on the shipped, filled
 file; pads where KiCad puts them, connectors pointing out in 3D, every part with a model.
 7. Silkscreen: no overlaps, labels in their boxes, text ≥ 0.8 mm high, lines ≥ 0.15 mm,
@@ -262,4 +313,6 @@ net classes bind their nets; exposed-pad via counts; RF launches measured in the
 every page fills its page; RF net lengths against the shortest tree.
 25-32. RF as laid out: simulated paths, part-to-pad distances, shunt grounds, chokes and
 ferrites, supply islands, stitching, the isolation budget, every RF segment measured.
+33. Every accurate analog net (named in the design notes): ground, not a supply, on the next
+layer under at least 95 % of each segment and under its parts' pads (`analog-signals` skill).
 Write each gate's result per band, not only at the board's top frequency (RF-MOD, 2026-10-29).

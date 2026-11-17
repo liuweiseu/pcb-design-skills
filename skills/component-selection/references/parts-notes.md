@@ -1,4 +1,4 @@
-# Part-specific notes and part hunting (CLAUDE_PCB.md §6 PID lessons, §17, §19, §20, §22, §26, §29)
+# Part-specific notes and part hunting (CLAUDE_PCB.md §6 PID lessons, §14a, §17, §19, §20, §22, §26, §29, §33)
 
 ## Op amps and models
 
@@ -7,6 +7,27 @@
   and V- + 0.1 overstated the drive by more than a volt.
 - A bipolar op amp's bias current through a big resistance does not show in a behavioural
   model: put it in a check (LM321: 45 nA x 1 Mohm = 45 mV of residual).
+- **A low-noise op amp can be too slow for the converter behind it** (ECP5-2ADC-2DAC board A,
+  2026-11-16, REVB 21). The OPA1612: 27 V/us, and its data sheet's full-power bandwidth is
+  4 MHz at 1 V pk-pk, too slow for the 32 MHz band of the 65 MS/s ADC it fed. The rule and
+  the bench numbers: see the analog-signals skill, "Amplifiers".
+
+## FT2232H: VPHY and VPLL want 3.3 V, not the internal 1.8 V (ECP5-2ADC-2DAC rev A, 2026-11-16)
+
+- **The part:** the data sheet asks 3.0-3.6 V on VPHY and VPLL. The internal regulator's
+  VREGOUT (1.8 V) feeds the VCORE pins only; the core's absolute maximum is 2.0 V.
+- **What happened:** rev A put VPHY and VPLL on the 1.8 V VREGOUT net, and its schematic
+  printed the mistake as a fact ("VREGOUT: internal 1.8 V, feeds VCORE x3, VPLL, VPHY").
+  With D+ and D- also swapped, USB PROG was dead on arrival: no JTAG and no UART until the
+  board was reworked by hand. The author's pin audit and five LLM reviews had passed it.
+- **A host that logs nothing at all on plug-in** means no pull-up: no PHY supply, no clock,
+  held in reset, or a cable with no data wires (pcb-bringup skill).
+- **The rework's own trap:** the 1.8 V net and +3V3 meet at a bead (FB6241) whose two pads
+  are on two different nets. Wiring +3V3 to both empty pads tied +3V3 to the 1.8 V core
+  (absolute maximum 2.0 V) on board A. How to write a rework step is in the pcb-bringup
+  skill.
+- **The checks that now catch it:** the power-pin voltage audit and pair-polarity trace
+  (pcb-schematic skill, `references/netlist-checks.md`; pcb-workflow gate 2a-2c).
 
 ## An integrator's capacitor is a filter part: film or C0G, never X5R (PID board)
 

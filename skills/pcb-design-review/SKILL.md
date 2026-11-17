@@ -64,9 +64,19 @@ reusable skeleton is in
 4. Number the things to attack, with the file to read for each.
 5. Restate the lessons' rules as checks: the reviewers cannot read this plugin, and reviewers
    who have only the git branch cannot read an uncommitted lessons file.
-6. Give a tools table: each command, and what it writes and where.
-7. List what is already known or decided.
-8. Prescribe the report's sections:
+6. **Ask every reviewer to redo the power-pin voltage audit and the pair-polarity trace from the
+   data sheets themselves, and to write each IC's table into the report** (pcb-workflow skill,
+   "Two checks no board ships without, and a third"; gates 2a-2d). The ECP5-2ADC-2DAC's five
+   reviewers did neither, and rev A went to JLCPCB with its USB programming port dead: the
+   FT2232H's VPHY and VPLL on 1.8 V, its D+ and D- swapped (2026-11-16).
+7. Give a tools table: each command, and what it writes and where.
+8. List what is already known or decided. **"Already verified" names the script and its
+   output**, and lists separately what was only read. A reviewer told "verified" skips it: the
+   ECP5's brief said "every IC's pin numbering against the datasheet ... FT2232H". That was true
+   of the pin numbers and false of the voltages and the D+/D- order, and nobody re-checked; one
+   reviewer restated the schematic's note ("VREGOUT: internal 1.8 V, feeds VCORE x3, VPLL,
+   VPHY") as checked.
+9. Prescribe the report's sections:
    - verdict;
    - findings table first, then each finding in full with severity, place, evidence, fix,
      confidence;
@@ -114,6 +124,9 @@ by side. It:
 - states the board's numbers and the claim "nothing blocks the order" for them to break;
 - lists every tool with the command that runs it and where it writes;
 - restates the lessons' rules as checks; the lessons added since the first round are the new
-  questions.
+  questions;
+- asks again for the power-pin and pair-polarity tables from the data sheets: a second round
+  that trusts the first's "checked" repeats its blind spot (ECP5-2ADC-2DAC passed two rounds
+  with its USB port dead).
 
 Reviewers copy anything they want to change into a temporary place (their own directory).

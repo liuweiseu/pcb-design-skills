@@ -8,7 +8,8 @@ description: RF and microwave board design rules - vendor reference layouts, 50 
 From CLAUDE_PCB.md §14 and the RF lessons of §18-29: the radio vendors' reference designs,
 Rosenberg, the SyzygyRadioDrivers field-solver study, CostasLink (rev A on the bench, 2026-10-29)
 and the RF-MOD / IQ-MOD tile boards. Fast digital edges, clocks, PDN and EMC are in
-`highspeed-digital`; release gates 22-32 in `pcb-workflow`; bench work in `pcb-bringup`; component
+`highspeed-digital`; accurate analog signals (ADC/DAC paths, references, tuning voltages) in
+`analog-signals`; release gates 22-32 in `pcb-workflow`; bench work in `pcb-bringup`; component
 derating in `component-selection`.
 
 References (read when the task reaches them):
@@ -27,6 +28,37 @@ References (read when the task reaches them):
 
 ## Layout: copy, then make it measurable
 
+- **Ground, not a supply plane, under every RF chain** (the user, 2026-11-04: first in the RF rules
+  and first in the `analog-signals` skill, which has the same rule for accurate analog). Every copper
+  layer that an RF line, pad or part can see is ground:
+  - the layer under the line, on whichever side of the board it runs. A line on B.Cu of a 4-layer
+    board sees In2, which the standard stack-up (`pcb-layout`) makes the supply layer: fill it with
+    ground there;
+  - whatever lies under a void in that ground: the relief window under a wide pad, a launch's
+    antipad, a slot;
+  - the layer under each match, bypass, choke and load.
+
+  The supply islands go beside the chains, never under them. Each RF part's supply comes in as a
+  short filtered feed: the choke with its bypass on its cold pad, then a ferrite (the bias-choke and
+  supply-island bullets under "Supplies, bias and isolation").
+  - **Why:** a line's return current runs in the plane nearest it (`highspeed-digital`, return
+    paths). Over a supply, the return reaches ground only through that supply's decoupling
+    capacitors. The island is also a cavity that every pad, window and choke opening onto it shares:
+    what one chain puts in, every other reads out. Over ground, the return runs straight back under
+    the line, and the fields end on the reference that every part of the chain measures against.
+  - **Rev A broke it** (CostasLink; `sim/aslaid/REPORT.md` findings 5, 6 and 8):
+    - one +5V_RF island, 86 x 44 mm on In2, under both chains, opened onto by the In1 relief windows
+      under the ADL5611s' pads;
+    - RFOUTB's pull-ups on B.Cu over the PLL supply islands;
+    - the coupler taps and J204's route referenced to a supply.
+
+    Its transmitter leaks into its own receiver at -53 dBm at RX MON (REVB 10), and the path is still
+    not found. The as-laid model puts the plane's own share 20-40 dB under the leak, only because
+    that island happens to sit 0.21 mm over the bottom ground (the "one supply island" bullet below).
+    Do not count on the stack to rescue the next board: rev B puts ground on In2 under the RF chains
+    (REVB 10, 54).
+  - **Check it:** gates 29 and 32 (`pcb-workflow`, verification gates) check the plane under every
+    RF segment and every void in it.
 - **Copy the radio vendor's reference layout exactly**, as GPiBridge copied the RP2350's regulator:
   the same kind of stack-up, the same 50 Ω line, the matching network beside the chip, the ground
   vias under and round it.
@@ -137,9 +169,9 @@ References (read when the task reaches them):
   pad, a capacitor series-resonant near the band (a few pF in 0402) and a 68-100 pF, then a ferrite
   or a resistor to the rail. (Rev A's LQW18AN43NG00D chokes, SRF ≥ 2.7 GHz, are ~340 Ω capacitors at
   5.8 GHz and went straight to the plane.)
-- **One supply island per RF chain, and ground under the RF lines:** separate transmit and receive
-  islands, each through its own ferrite and capacitors. The layer under a relief window is ground,
-  not a supply. Model the plane before blaming it: the cavity that matters is the one each island
+- **One supply island per RF chain, beside it, never under it:** separate transmit and receive
+  islands, each through its own ferrite and capacitors. The layer under the lines and under a relief
+  window is ground, not a supply (the first rule under "Layout"). Model the plane before blaming it: the cavity that matters is the one each island
   forms with its nearest ground, which may not be the plane named in the stack-up.
 - **The isolation budget is a design number.** Before the order, estimate each transmitter-to-
   receiver path (rails, plane cavities, layout coupling) and write the leak beside the weakest signal

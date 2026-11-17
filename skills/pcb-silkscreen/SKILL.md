@@ -36,6 +36,11 @@ Reference files (read when the task touches them):
   connectors (ECP5 P2, memory).
 - Every connector that leaves the board is labelled with what it is for and its limits:
   "±1 V MAX", "15 V DC, 1 A MIN" (ECP5 P2, GPSDO P13).
+- **Print each input's resistance beside its jack** ("50Ω", "1 MΩ"): a generator set "into
+  50 ohm" puts twice its setting on a jack that is not terminated, and a terminated control
+  input is a load on what it controls (AMOD and RF-MOD bring-up planning, 2026-11-15: the 555
+  tile's CV jack, 2.2 k with a 51 ohm termination, drags its thresholds down; see the pcb-bringup
+  skill).
 - The label sits by **that** connector, not the neighbour's (GPSDO P17).
 - A U.FL tap's name stands beside the tap and its designator is not printed: "J107"
   reads as a jumper, and nobody finds the jumper (ECP5 P26).
@@ -76,6 +81,18 @@ Reference files (read when the task touches them):
 - **Header pins.** Every pin is labelled next to itself: the top row's labels above it,
   the bottom row's below. Never all on one side, which makes people probe the wrong pin
   (GPSDO P29, Icepi P30).
+  - **The names sit next to the row they name, never next to the ground row.** ECP5-2ADC-2DAC
+    board A's J602 (RAILS, 2 x 9) printed its rail names above the header, beside the top row,
+    and the top row is ground; the rails are on the bottom row. The first meter walk went where
+    the names pointed and every pin read -2.507 V (ground against +2V5) (2026-11-16). Put the
+    signal row next to the names and ground on the far row, and print "GND" by the ground row
+    too. A note elsewhere on the silk ("top row = GND") does not undo what the names' position
+    says.
+  - **A 2-row connector prints its orientation at its ends:** pin 1, and the names at the end
+    where they are ("3V3 GND" at the power end, "IO1" at its end), so a person plugging in and a
+    reviewer holding the standard's figure can see which way round it is. "PMOD 1-4: IO1-4" in
+    the middle says nothing about that (the user, 2026-11-16, after ECP5-2ADC-2DAC rev A's
+    mirrored Pmod sockets; the pcb-layout skill's dual-row-headers.md, step 8).
   - Rotate the labels with the header (GPSDO P17).
   - Name the colours and signals of screw-terminal wires at the screw (GPSDO P13).
     - Centre each label under its pin, in the strip just outside the terminal's outline.

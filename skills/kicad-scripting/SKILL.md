@@ -26,7 +26,8 @@ References (read when the task touches them):
 - `references/ngspice.md`: simulating the exported netlist (PID motor board), ngspice
   traps, friction and op-amp models. Read before any SPICE work.
 - `references/other-tooling.md`: datasheet fetching, chart reading from PDFs, Vivado
-  tristates, Ghostscript, renames and scripted edits in detail. Read when those come up.
+  tristates, a bench PC's `PATH` and build environment, Ghostscript, renames and scripted
+  edits in detail. Read when those come up.
 
 ## Running the tools
 
@@ -34,6 +35,10 @@ References (read when the task touches them):
   the AppImage (e.g. `kicad-10.0.6-x86_64.AppImage`). With an extracted copy (`AppDir`),
   run `AppDir/AppRun python3.11 script.py`: calling `usr/bin/python3.11` directly with
   `LD_LIBRARY_PATH` set segfaults on `import pcbnew` (10.0.6).
+- **On a bench PC, a vendor's `PATH` can hide the system's tools** (GPiBridge,
+  2026-11-15: Vitis 2022.1's broken CMake 3.3.2 and its own `arm-none-eabi-gcc` ahead of
+  `/usr/bin`). A build script names the tools it uses, builds into `build-<hostname>/`, and
+  bench tools are installed under names that shadow nothing (`references/other-tooling.md`).
 - **Let an explicit tool path win, and check the version of one found on PATH** (PID motor
   board). Two reviewers' machines had KiCad 9's `kicad-cli` in /usr/bin; it beat
   `KICAD_APPIMAGE`, and /usr/share/kicad's KiCad 9 libraries beat the AppImage's.
@@ -191,6 +196,8 @@ References (read when the task touches them):
 - **Spell signs in node names** ("P15V", "M15V"): "+15V" and "-15V" sanitise alike.
 - **`.ic V(out)=0` on every integrator**, or it starts railed.
 - **Take a transistor's dissipation from its own pins** (`V(c) - V(e)` via `Deck.pin`).
+- **Stop a stuck ngspice-through-ctypes run with `timeout -s KILL`**: a Python signal
+  handler cannot interrupt the library (op-amp bring-up rehearsal, 2026-11-15).
 
 ## Generator code and scripted edits
 

@@ -68,6 +68,29 @@ working voltage.
 - a TVS. A 12 V, 5 A brick can make a dropped paper clip across two pads hot enough to burn a
   finger.
 
+## Budget the bench input from the supply's terminals to the rail, at full load (ECP5-2ADC-2DAC board A, 2026-11-16)
+
+- **What happened:** J601, the bench input, is a 0.1" 2-pin header, then an SS34 and a PTC.
+  5.00 V at the supply was 4.52 V at J601 through a BNC cable and thin wire, and 4.22 V on
+  +5V, at 0.385 A with the FPGA unconfigured. Configured, the board draws nearly twice that.
+- **The rule:**
+  - give a bench input a connector that takes real leads (a screw terminal, a barrel jack),
+    not a 0.1" header;
+  - use an ideal-diode FET rather than a Schottky where the drop matters (see "Protect the
+    input" above);
+  - set the rail's window so that the board's own drop, from the supply's terminals to
+    the rail at full load, fits inside it;
+  - tell the person at the bench to use short, thick leads straight to the input
+    (pcb-bringup skill).
+
+## Switching regulators draw about constant power (ECP5-2ADC-2DAC board A, 2026-11-16)
+
+Once the bucks regulate, a board draws about constant power, so its input current falls as
+its input voltage rises: board A drew 0.388 A at 4.0 V and 0.369 A at 5.0 V. Budget the input
+current (fuse, PTC, connector, the drop above) at the lowest input voltage, not the nominal
+one. A power-up staircase check must test the power (V x I) for "rising with the voltage", not
+the current (pcb-bringup skill).
+
 ## Inductive loads
 
 Coils, motors, solenoids, relays keep their current when switched off. Give each a freewheel

@@ -27,6 +27,11 @@ For simulating RF chains as laid out (ABCD models, the circuit the copper makes)
 - **An integrator starts railed** unless the deck says `.ic V(<its output>)=0`; the
   scenario that switches I in needs it.
 - Friction decks run with `gear` integration and 20-50 us steps.
+- **A Python timeout cannot stop ngspice running through ctypes: kill it** (op-amp
+  bring-up rehearsal, 2026-11-15). A signal handler that raises does nothing while the
+  shared library holds the thread, and the exception is swallowed if it lands in one of the
+  library's callbacks: `timeout` did not stop a stuck simulated run. Run rehearsals under
+  `timeout -s KILL`, and install a "supply off on SIGTERM" handler only for real benches.
 
 ## Models
 

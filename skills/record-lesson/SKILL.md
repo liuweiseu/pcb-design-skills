@@ -30,7 +30,7 @@ the topic at hand. The date and board go in the citation instead.
 
 | skill | topic: put a lesson here when it is about |
 |---|---|
-| `pcb-workflow` | how the user works (logging, questions, rev A, git, licence, minimising the user's steps); the build system, relative paths, single sources of truth, generators, scripted edits, renames, determinism; generated documents and fitted pages; the verification gates |
+| `pcb-workflow` | how the user works (logging, questions, rev A, git, licence, minimising the user's steps, the agent's own background processes); the build system, relative paths, single sources of truth, generators, scripted edits, renames, determinism; generated documents and fitted pages; the verification gates, including the power-pin, pair-polarity and standard-connector checks |
 | `pcb-design-review` | outside LLM reviews: `design_reviews/` layout, the brief, the report, reconciling, rounds |
 | `record-lesson` | how lessons themselves are recorded (this skill) |
 | `pcb-schematic` | schematics to the Art of Electronics standard: drawing, symbols, values and design equations, netlist checks |
@@ -43,12 +43,13 @@ the topic at hand. The date and board go in the citation instead.
 | `kicad-scripting` | KiCad 10, pcbnew Python, kicad-cli, ngspice, and tooling quirks |
 | `highspeed-digital` | fast digital: clocks, memory, differential pairs, escape routing |
 | `rf-design` | RF: lines, launches, matching, decoupling at RF, stitching, simulation as laid out |
+| `analog-signals` | accurate analog signals: ADC/DAC paths, references, tuning voltages, loop filters, high-impedance nodes; ground under them, amplifier slew across the band |
 
 - Choose by the lesson's **primary** topic: what a reader would be doing when they need it. A
   silk clearance learned on an RF board goes to `pcb-silkscreen`.
 - If it truly spans two, write it once in the main skill and add a one-line pointer in the
   other ("see the jlcpcb-order skill, ...").
-- A general rule in `highspeed-digital`, `rf-design`, `component-selection` or
+- A general rule in `highspeed-digital`, `rf-design`, `analog-signals`, `component-selection` or
   `boards-for-children` that a board has now taught the hard way: rewrite it beside the others
   in that skill with the board's citation.
 - **SKILL.md or references/?** The rule itself (one bold-lead bullet) goes in the skill's

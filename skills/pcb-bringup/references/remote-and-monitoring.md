@@ -59,6 +59,15 @@ A current monitor on each rail that feeds a separate section, on I2C (INA226 cla
 mohm shunt). The bench supply's one number cannot say which section draws what, or which
 part is hot.
 
+## Let the firmware read its own rails (GPiBridge rev A, `bringup/REVB.md` 1.2)
+
+- An MCU's spare ADC pins cost a divider each; left unconnected, the only way to a rail is a hand
+  on a probe.
+- Route VBUS, each switched rail and the core supply to ADC pins and report them in the status
+  command.
+- Until then the chip's temperature sensor, read against the ADC's reference, gives the 3.3 V rail
+  to about 5 % with no pin at all (RP2350: 0.706 V at 27 C over the rail).
+
 ## RF self-test without hands
 
 - an internal loopback through a fixed pad, with a 50 ohm load on each port, so calibration

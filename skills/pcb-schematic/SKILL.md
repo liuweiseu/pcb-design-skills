@@ -1,6 +1,6 @@
 ---
 name: pcb-schematic
-description: Drawing and checking schematics to the Art of Electronics standard - signal flow, notes at the node, labels, symbols, decoupling, net names, pin checks against datasheets, and the netlist checks every schematic gets (one-pin nets, rails, fuses, straps, op-amp ranges, design equations). Use when generating, drawing, reviewing or checking a KiCad schematic, a schematic generator, its overlap checker, symbols, net labels or netlist assertions.
+description: Drawing and checking schematics to the Art of Electronics standard - signal flow, notes at the node, labels, symbols, decoupling, net names, pin checks against datasheets, the pin audit (every power pin by voltage, every pair's polarity, unfitted parts both ways), and the netlist checks every schematic gets (one-pin nets, rails, fuses, straps, op-amp ranges, design equations). Use when generating, drawing, reviewing or checking a KiCad schematic, a schematic generator, its overlap checker, symbols, net labels or netlist assertions.
 ---
 
 # Schematics: the Art of Electronics standard
@@ -13,9 +13,10 @@ Reference files (read when the task touches them):
   PDF check, and how GPSDO's checker passed for weeks with four faults. Read before
   writing or trusting any overlap check.
 - `references/netlist-checks.md`: the full Rosenberg checklist with its board stories
-  (fuses, ORing, straps, safe idle states, op-amp ranges, equation inputs). Read when
-  writing or running the build's netlist checks, or reviewing power, protection and
-  control lines.
+  (fuses, ORing, straps, safe idle states, host-line levels, op-amp and driver ranges,
+  terminated control inputs, equation inputs), and the pin audit (power pins by voltage,
+  pair polarity, DNP parts both ways, diodes and ties between rails). Read when writing or
+  running the build's netlist checks, or reviewing power, protection and control lines.
 - `references/dated-lessons.md`: later lessons from CostasLink, the tile boards (AMOD,
   RF-MOD) and the PID motor board: late-added parts, hand-drawn filters, tile net
   namespaces, generic blocks, distributor pin checks, shared SPI outputs, KiCad's y-up
@@ -170,6 +171,29 @@ pcb-silkscreen skill's `references/teaching-boards.md`.
   - Also compare every symbol's pin names with the distributor's (EasyEDA) drawing of
     its LCSC code (AMOD-C; `references/dated-lessons.md`; JLCPCB-side checks in the
     jlcpcb-order skill).
+- **Every power pin of every IC, by voltage, from the netlist** (ECP5-2ADC-2DAC rev A,
+  2026-11-16: its FT2232H's VPHY and VPLL got 1.8 V where the data sheet says 3.0-3.6 V,
+  and USB PROG was dead on arrival after the author's pin audit and five LLM reviews passed
+  it). Transcribe each IC's pin table (pin, name, range, the line quoted); a script fails on
+  a rail outside the range or a pin missing from the table. The gate is pcb-workflow's
+  gate 2a; the schematic-side detail is in `references/netlist-checks.md`.
+- **Every pair's polarity, connector to chip, by pin function** (the same board: its
+  FT2232H's D+ and D- were swapped). Walk each line through every in-line part by its data
+  sheet's internal pairing and assert + reaches + (gate 2b; `references/netlist-checks.md`).
+- **Name a pin by its function in the generator, and read the number against the data
+  sheet's table** (gate 2c). The ECP5's generator wrote `dmp, dpp = u.pin("8"), u.pin("7")`,
+  and pin 7 is DM: a variable's name is not a check.
+- **Check parts that are not fitted both ways**: as built with every DNP part off, then
+  with each fitted (the user, 2026-11-16). Also fail a diode path from one rail to another,
+  a diode symbol whose A/K disagrees with the part, and two rails of different voltage tied
+  through a bead, an inductor or 10 ohm or less (`tools/pin_audit/pin_audit.py`;
+  `references/netlist-checks.md`).
+- **A note on the sheet is not evidence.** The ECP5's schematic printed its mistake as a
+  fact ("VREGOUT: internal 1.8 V, feeds VCORE x3, VPLL, VPHY") and a reviewer restated it as
+  checked. A claim of "checked" names the script and its output file (2026-11-16).
+- **A standard connector is checked against the standard's figure from the placed pads**
+  (gate 2d): the netlist can be right while the drawing is mirrored. That check and the
+  dual-row header procedure are in the pcb-layout skill.
 - **Trace every path** with a netlist walk (`trace_paths.py`): signal paths end to end,
   power from the input to every pin, every configuration and strap pin, every clock.
 - **A filter drawn by hand is checked by its nets, not its picture** (CostasLink
@@ -201,8 +225,18 @@ lists. Details, numbers and stories: `references/netlist-checks.md`.
 - **Straps against an FPGA that is still configuring** get external resistors (4.7 k).
 - **A control whose idle must be safe rests where an absent host leaves it**: active-high,
   with a pull-down (1 k) that beats configuration pull-ups.
+- **Every host line has a level of its own when the host is not there**: for each line,
+  write what the circuit does with it floating, low and high, and fit the resistor that
+  makes floating the safe one; order pulls and power switches so a powered receiver never
+  sees a floating or wrong-way input (AMOD/RF-MOD and GPiBridge bring-up planning,
+  2026-11-15).
+- **A terminated control input is a load on what it controls**: work out the node with the
+  jack open, with a 50 ohm source at 0 V and with a high-impedance source (the AMOD 555
+  tile's CV jack, 2026-11-15).
 - **Every op amp's supply range and input common-mode range against its rail**,
-  asserted by the generator from datasheet numbers.
+  asserted by the generator from datasheet numbers; and every driver's minimum supply at
+  the lowest input the board is promised (three motor and coil drivers sat below theirs on
+  USB alone, behind a Schottky: tile boards' pin audit, 2026-11-16).
 - **A comparator or logic input on a connector** gets a series resistor sized to the
   input clamp's current limit.
 - **Polarized parts** the right way round; every capacitor rated above the worst-case

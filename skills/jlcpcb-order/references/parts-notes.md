@@ -41,6 +41,10 @@
   host's pin 13 - k, IO lines on the host's ground and 3.3 V. Caught before the order by mating
   the two footprints on paper; fixed by moving the plug two columns and renaming the nets; a fab
   check (`check_pmod`) now maps every plug pad to its standard pin (§17).
+  - **Correction, 2026-11-16: "both mating halves" was not enough;** `check_pmod`'s "standard
+    pin" was a mirrored host's, so the AMOD and RF-MOD rev A plugs mate with nothing standard.
+    See the pcb-layout skill, references/connector-routing.md, "Pmod and other keyed two-row
+    connectors".
 - **Edge vs vertical:** CostasLink's first MMCX candidate, BWMMCX-KEF (C5250057), was edge-mount
   (its EasyEDA footprint carries Edge.Cuts); the taps wanted the vertical BWMMCX-KE (C5137198).
 - **2.54 mm headers at their own length:** XFCN PZ254V-11-02P C492401, -03P C2937625, -04P

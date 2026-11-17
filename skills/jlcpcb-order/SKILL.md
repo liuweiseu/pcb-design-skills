@@ -132,10 +132,15 @@ tooling quirks), `pcb-workflow` (the gates every release passes).
     land patterns carry a "+" with chamfered corners at pad 1 and a cathode band on pad 1's
     side, both agreeing with KiCad's pad 1 at 0.
 - **For a keyed two-row connector, derive the pin from the pad's position relative to the
-  body, never from its number, and check both mating halves.** KiCad's horizontal 2x6 Pmod
-  header/socket put pad 1 on the row far from the body; JLCPCB's drawings (PZ254R-12-12P
-  C492434, HC-PM254 C22373932) put it near the body, so their pad p is KiCad's 13 - p (§17;
-  caught by mating the footprints on paper; `check_pmod` maps every plug pad to its pin).
+  body, never from its number; check one half against the standard's own figure, then the
+  mating halves.** KiCad's horizontal 2x6 Pmod header/socket put pad 1 on the row far from
+  the body; JLCPCB's drawings (PZ254R-12-12P C492434, HC-PM254 C22373932) put it near the
+  body, so their pad p is KiCad's 13 - p (§17; caught by mating the footprints on paper;
+  `check_pmod` maps every plug pad to its pin). **Correction, 2026-11-16:** the "standard
+  pin" `check_pmod` mapped to was ECP5-2ADC-2DAC rev A's socket, itself mirrored end to end
+  against the Pmod spec's figure 5, so the AMOD and RF-MOD rev A plugs mate with that host
+  and nothing standard: two of our boards agreeing proves only that they agree. The
+  ten-step procedure for dual-row and right-angle headers is in the pcb-layout skill.
 - **A fetched footprint can carry the board edge.** An edge-mount jack's EasyEDA footprint
   (easyeda2kicad) draws Edge.Cuts lines and KiCad cuts the board along them. Read a fetched
   footprint's layers before vendoring it. Choose vertical or edge-mount on purpose

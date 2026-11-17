@@ -20,6 +20,9 @@ that matches the task:
   Read when laying out supplies or zones, or when DRC reports islands or starved thermals.
 - `references/connector-routing.md`: order reversals, two headers on one side, Pmod rows and
   numbering. Read when lines run between a chip and a connector or between headers.
+- `references/dual-row-headers.md`: the record of mirrored 2-row and right-angle headers, the ten
+  steps that work out their geometry, and why a mirrored one cannot be re-soldered right. Read
+  before placing, copying or checking any 2-row connector.
 - `references/tile-and-drawn-boards.md`: hand-laid cell boards (AMOD, RF-MOD) and boards whose
   copper follows the drawn schematic (op-amp, PID motor board). Read for any hand-placed small-cell
   or teaching board.
@@ -99,16 +102,19 @@ spacing), the component-selection skill (current, DC resistance budgets).
     possible, each short.
   - **4 layers, parts on top:** L1 parts and signals; **L2 solid ground with nothing but via holes
     in it: no traces**; L3 supplies and leftover routing, the rest filled with ground stitched to
-    L2; L4 the same as L3.
+    L2; L4 the same as L3. So an RF or accurate analog trace on L4 sees L3: ground fill there
+    under it, not a supply island (the rf-design skill; the analog-signals skill).
   - **4 layers, parts on both sides:** L1 and L4 parts, signals and supplies; L2 ground; L3
     supplies.
   - **Why the ground goes on L2:** a via's inductance grows faster than its length. Rosenberg's
     curve: about 45 pH for the 0.38 mm from L1 to L2 of a typical 4-layer board, about 500 pH
     through 1.6 mm, eleven times as much. On 2 layers there is no choice, which is the main reason
     4 layers ground better.
-- **Ground.** Keep an unbroken ground reference under every fast signal. A layer change gets a
-  ground via within about 1.5 mm. Keep analog and digital apart physically, and keep switch nodes
-  small (ECP5 P2).
+- **Ground.** Keep an unbroken ground reference under every fast signal, and **ground, never a
+  supply plane, under every RF and accurate analog signal** (the user, 2026-11-04; the rf-design
+  skill's "Ground, not a supply plane, under every RF chain" and the analog-signals skill have the
+  reasons and gates). A layer change gets a ground via within about 1.5 mm. Keep analog and
+  digital apart physically, and keep switch nodes small (ECP5 P2).
 - **Each ground pad gets its own via,** at the pad (Rosenberg: "I cannot stress enough how
   important this is"), and each power-plane connection likewise, beside its decoupling capacitor.
   A shared via is shared inductance, which couples the parts that share it. On 2 layers, make that
@@ -244,9 +250,36 @@ spacing), the component-selection skill (current, DC resistance budgets).
 - **Mating connectors on a generated board:** never model pcbnew's `Flip()` (it mirrors y whatever
   its enum says); put the host's measured pins into the generator and refuse to lay copper until
   pins 1, 2, 3, 39 and 40 sit on them (CostasLink; generated-placement.md).
-- **For any keyed two-row connector, derive the pin from the pad's position relative to the body,
-  never from its number,** and check both mating halves: KiCad's and JLCPCB's Pmod footprints
-  number pads in opposite directions (AMOD-A, RF-MOD; connector-routing.md).
+- **Dual-row headers, and right-angle ones above all, are worked out from geometry, never from pad
+  numbers** (the user, 2026-11-16: "There have been several problems with these, especially where
+  they are supposed to be 90 degree headers"). ECP5-2ADC-2DAC rev A's Pmod sockets J303/J304,
+  copied from the IcepiZero Pmod adapter, are mirrored end to end against the Pmod spec's figure 5,
+  so a bought Pmod meets +3V3 on IO1; AMOD-A and RF-MOD's plugs first met host pin 13 - k (KiCad's
+  and JLCPCB's Pmod footprints number pads in opposite directions); OWLternatingCurrent's
+  tree-perch joint meets pin 17 - n. The netlist was right every time, so no netlist check sees
+  this. For every 2-row connector:
+  - name the four ways it can sit (as intended, mirrored end to end, rows swapped, half turn) and
+    what each does to power and ground;
+  - derive each pin from the pad's position relative to the body, read from the board file, never
+    from its number, and write the mapping as a tested function in the generator;
+  - compare with the standard's own figure in the figure's stated viewpoint, by coordinates;
+  - **two of our boards agreeing proves only that they agree** (correction, 2026-11-16, to the
+    earlier "check both mating halves": `check_pmod` mapped the AMOD and RF-MOD rev A plugs to
+    ECP5 rev A's mirrored socket, so they mate with that host and nothing standard; the user has
+    them marked non-standard and rev B follows the specification). Check against the standard
+    first, then mate every partner, a bought module included;
+  - re-derive a copied connector on every board; print the orientation on the silk; lay the real
+    parts on a 1:1 print; gate it in the build (`tools/pin_audit/connectors/`, gate 2d).
+  The ten steps, the KiCad `PinSocket_2xNN_P2.54mm_Horizontal` geometry and the full record are
+  in dual-row-headers.md; the Pmod routing detail in connector-routing.md.
+- **A mirrored 2-row connector cannot be undone by re-soldering or by stacking straight parts**
+  (the user, 2026-11-16, asked about moving the right-angle Pmods to the bottom or extending them).
+  Moving a right-angle part to the bottom mirrors it through the board; a chain of straight-through
+  parts acts as a turn when turned over. Either gives the old mismatch or "power right, IO1-4 on
+  IO5-8", never the standard: undoing an end-to-end mirror needs wires that cross. What works: plug
+  the other part in turned over and swap pmod[0..3] with pmod[4..7] in the `.lpf`, or a crossed
+  adapter board (positions s to 5 - s, rows kept), or a crossed 12-wire harness
+  (`tools/pin_audit/connectors/pmod_rework_options.py`; dual-row-headers.md).
 - **Cables.** Leave room for fat plugs beside each other: USB next to HDMI next to RJ45 (ECP5 P14).
   Space SMAs for fingers and wrenches, and spread them evenly along one edge (ECP5 P2, GPSDO P2).
   On a grid of two-port cells, put the jacks in a checkerboard (AMOD/RF-MOD; tile-and-drawn-boards.md).

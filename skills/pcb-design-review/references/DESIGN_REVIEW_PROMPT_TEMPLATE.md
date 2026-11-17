@@ -69,6 +69,15 @@ You cannot read the lessons these come from; check the board against each.
 - [ ] <Rule restated as a check, with its threshold, e.g. "ERC 0 and DRC 0 errors and 0
   unconnected on the shipped file with zones filled".>
 - [ ] <Every symbol pin against the datasheet's pin figure.>
+- [ ] **Redo from the data sheets yourself, and write each table into your report:** every
+  power pin of every IC by voltage (pin, data sheet name, required range, the data sheet line
+  quoted, the rail the netlist puts on it); every differential or polarized pair (USB D+/D-,
+  LVDS/TMDS P/N, MDI, CAN, RS-485, clocks) traced connector pin to chip pin through every in-line
+  part by its internal pairing; every standard connector (Pmod, SYZYGY, HDMI, USB-C, JTAG)
+  against the standard's own figure, from the placed pads. Do not take "verified" below on
+  trust.
+- [ ] <Every DNP part: what happens if it is fitted, alone and with the options meant to go on
+  together.>
 - [ ] <Every LCSC code's description matches value and package; stock is the free count.>
 - [ ] <Every probe loop: what a scope ground clip there does, in watts per resistor.>
 - [ ] <...the verification gates and board-specific rules; in a second round, the lessons
@@ -84,6 +93,9 @@ You cannot read the lessons these come from; check the board against each.
 ## Already known or decided (do not spend time on these)
 
 - <Known issue or decision, and why.>
+- <Already verified: name the script and its output file for each claim (e.g. "pin numbers:
+  `tools/pin_audit/pin_audit.py`, `build/pin_audit.txt`"); list separately what was only read
+  by eye.>
 - <...>
 
 ## Your report: `REPORT.md` sections

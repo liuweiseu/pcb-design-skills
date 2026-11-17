@@ -7,22 +7,24 @@ A Claude Code plugin: the PCB design lessons of `CLAUDE_PCB.md`
 
 | skill | covers (CLAUDE_PCB.md) |
 |---|---|
-| `pcb-workflow` | entry point: how to work, build system, verification gates (§1, §2, §10) |
+| `pcb-workflow` | entry point: the two checks no board ships without, how to work, build system, verification gates (opening block, §1, §2, §10) |
 | `pcb-design-review` | outside LLM reviews: the `design_reviews/` layout and brief (§1) |
 | `record-lesson` | turning a new request or fault into a rule in the right skill |
 | `pcb-schematic` | schematics to the Art of Electronics standard (§4) |
 | `pcb-silkscreen` | the board explains itself (§6) |
 | `pcb-layout` | placement, routing, mechanical (§5, §7) |
 | `jlcpcb-order` | parts, sourcing, manufacturing package, CPL rotations (§3, §8) |
-| `pcb-bringup` | bring-up and debuggability (§9) |
+| `pcb-bringup` | bring-up and debuggability (§9, §30-33) |
 | `component-selection` | real components, power, current, magnetics (§12, §15) |
 | `boards-for-children` | toy-safety rules (§16) |
 | `kicad-scripting` | KiCad 10, pcbnew Python, ngspice and tooling quirks (§11) |
 | `highspeed-digital` | fast digital (§13) |
 | `rf-design` | RF (§14) |
+| `analog-signals` | accurate analog signals: ground under them, amplifier slew over full swing (§14a) |
 
-The dated lessons (§17-29, and the PID motor board's lessons in §6) are filed under
-the skill they belong to.
+The dated lessons (§17-33, and the PID motor board's lessons in §6) and the opening block
+"Two checks no board ships without, and a third" (in `pcb-workflow`) are filed under the skill
+they belong to.
 
 ## Install
 
@@ -70,3 +72,10 @@ codex plugin marketplace add /path/to/pcb-design && codex plugin add pcb-design@
 ```
 
 To try it for one Claude Code session without installing: `claude --plugin-dir /path/to/pcb-design`.
+
+## Licence and attribution
+
+The skills are adapted from `CLAUDE_PCB.md` in
+[gallicchio/GPiBridge](https://github.com/gallicchio/GPiBridge), Copyright (c) 2026 Jason
+Gallicchio, which its author confirmed is MIT licensed. The adaptation and the plugin are
+Copyright (c) 2026 Wei Liu. Everything here is under the MIT License: see `LICENSE`.

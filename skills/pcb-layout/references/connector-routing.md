@@ -47,6 +47,15 @@ cross; and before laying out any keyed two-row connector (Pmod, 2x20 header).
   the plug two columns and renaming the nets, and a fab check (`check_pmod`) now maps every plug pad
   to its standard pin. For any keyed two-row connector, derive the pin from the pad's POSITION
   relative to the body, never from its number, and check both mating halves.
+  - **Correction, 2026-11-16: "both mating halves" was not enough.** The "standard pin"
+    `check_pmod` maps to was the pin of ECP5-2ADC-2DAC rev A's socket, and that socket is mirrored
+    end to end against the Pmod specification (its figure 5; the IcepiZero Pmod adapter it was
+    copied from is mirrored too; the connector check, gate 2d of the pcb-workflow skill's
+    verification gates, `tools/pin_audit/connectors/`). So the AMOD and RF-MOD rev A plugs mate with that host and with
+    nothing standard; the user has them marked as non-standard, and rev B follows the
+    specification. Check a connector against the standard's own figure first, and against our
+    other board second: two of our boards agreeing proves only that they agree. The ten steps are
+    in dual-row-headers.md.
 - **A 2 x 6 Pmod plug's lower row is reachable only through the upper row's 0.74 mm gaps** (0.2 mm
   tracks with 0.27 mm to spare) or along the bottom edge (two tracks fit between the pads and the
   0.3 mm edge clearance). Feed the upper row from the back, straight down; feed the lower row from

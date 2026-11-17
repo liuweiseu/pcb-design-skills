@@ -5,8 +5,8 @@ description: Fast digital and signal-integrity rules - edge rates and bandwidth,
 
 # Fast digital
 
-From CLAUDE_PCB.md §13. For the fast boards to come: nothing here has been tested on one of the
-user's boards yet. Sources: Howard Johnson, *High-Speed Digital Design*; Eric Bogatin, *Signal and
+From CLAUDE_PCB.md §13. For the fast boards to come: most of it is from the sources below, not yet
+tested on one of the user's boards; a rule a board has taught carries that board's citation. Sources: Howard Johnson, *High-Speed Digital Design*; Eric Bogatin, *Signal and
 Power Integrity — Simplified*; Henry Ott, *Electromagnetic Compatibility Engineering*; the FPGA
 vendors' PCB guides (AMD/Xilinx UG583, Lattice's ECP5 notes).
 
@@ -76,6 +76,10 @@ time); `pcb-layout` for general placement and routing; `jlcpcb-order` for orderi
 - **Crosstalk:** long parallel runs at least 3 widths apart, centre to centre; keep aggressor-victim
   parallel lengths short; stripline for long buses (its far-end crosstalk is nearly zero).
 - **Simultaneous switching:** spread a wide bus over banks with enough ground pins, and terminate it.
+- **Check which pins take a DDR (or other I/O) register before assigning a fast bus.** On
+  ECP5-2ADC-2DAC nobody had, and the one bank whose pins do not was found by the first gateware,
+  after the order (bring-up planning, 2026-11-15). Read the FPGA family's pin and bank tables for
+  every interface that needs IDDR/ODDR, and build a test bitstream with them before the order.
 
 ## Multi-Gb/s details
 
@@ -108,6 +112,15 @@ time); `pcb-layout` for general placement and routing; `jlcpcb-order` for orderi
   the source, one load per output (or a fan-out buffer), nothing routed under a crystal or
   oscillator, a ground guard round the crystal.
 - **Clock jitter caps an ADC's SNR** at −20·log10(2π·f_in·t_jitter).
+- **Count an ECP5 design's global clocks; a design can build clean, meet timing, load, and still
+  be dead** (ECP5-2ADC-2DAC board A, 2026-11-16, REVB 16). Read the count in every build's
+  report and keep it low: a clock that only feeds a counter gets `(* noglobal *)`. What happened,
+  the fix and how it was found: see the pcb-bringup skill, references/firmware-gateware-fpga.md,
+  "An ECP5 design can build clean, meet timing, load, and still be dead".
+- **Put every converter's sample clock on an FPGA output that a PLL can drive** (ECP5-2ADC-2DAC
+  board A, 2026-11-16): stepping the PLL's phase then lets the board measure its own analog chain
+  with no scope. How, and what it found: see the pcb-bringup skill, references/bench-planning.md,
+  "The board measures its own analog chain".
 - Crystal load capacitors and radio ppm budgets: see `rf-design` ("Crystals").
 
 ## EMC

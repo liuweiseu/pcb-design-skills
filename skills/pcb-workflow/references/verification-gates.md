@@ -1,12 +1,33 @@
 # Verification gates (run them every build)
 
 Before calling a schematic, PCB or release done, pass every gate below. Gates 22 and 24-32 are
-the RF ones (see the rf-design skill for the rules behind them); write each RF gate's result per
+the RF ones (see the rf-design skill for the rules behind them), and gate 33 the accurate analog
+one (analog-signals skill); write each RF gate's result per
 band, not only at the board's top frequency: RF-MOD's stitching passed at 2.4 GHz (λ/20 is
 3 mm) and fell short at its 5.8 GHz stretch (RF-MOD, 2026-10-29).
 
 1. ERC clean (the warnings understood), with the netlist exported.
-2. Every symbol pin checked against the datasheet figure.
+2. Every symbol pin checked against the datasheet figure, and **these checks run as scripts that
+   fail the build** (SKILL.md, "Two checks no board ships without, and a third"; ECP5-2ADC-2DAC
+   rev A failed 2a and 2b and lost its USB port: the FT2232H's VPHY and VPLL on 1.8 V where its
+   data sheet says 3.0-3.6 V, and its D+ and D- swapped, after the author's pin audit and five
+   LLM reviews in two rounds had passed it). How each check works, with the tools and the cases
+   behind it: see the pcb-schematic skill, references/netlist-checks.md, "The pin audit".
+   - **2a. Power pins, by voltage:** every power pin of every IC against a range table
+     transcribed from its data sheet; a missing pin or a rail outside its range fails, and the
+     table goes in the release log.
+   - **2b. Pair polarity, by pin function, connector to chip,** through every in-line part by its
+     data sheet's internal pairing; every + reaches a +, and each pair's path is printed.
+   - **2c. Pin numbers by function, not by memory or variable name,** for every pin the generator
+     names by number.
+   - **2d. Standard connectors against the standard's drawing,** from the placed pads
+     (`tools/pin_audit/connectors/`, which also mates every pair of boards meant to mate);
+     dual-row and right-angle headers: the pcb-layout skill's ten steps.
+   - **Not-fitted parts, both ways** (the user, 2026-11-16): every DNP part off, then each fitted
+     alone and in any combination meant to go on together; `tools/pin_audit/pin_audit.py` also
+     fails diode paths between rails, diode A/K mismatches and low-ohm ties between rails.
+   - **"Checked" names the script and its output file.** A schematic note, a generator comment
+     or "verified" in a review brief is not evidence.
 3. A path trace of every signal, power rail, clock and strap.
 4. No overlaps on schematic sheets, checked in code, by `pdftotext -bbox` on the exported PDF,
    and by eye on the PDF.
@@ -139,9 +160,20 @@ band, not only at the board's top frequency: RF-MOD's stitching passed at 2.4 GH
     - **Fence:** short. 0.9-1.0 vias per mm on its longer runs, where the generator skipped
       spots, and none within 1.6 mm along RX MON's 5.8 mm tap.
     - **What cost the dB:** gates 25-31.
+33. **Every accurate analog net** (named in the design notes; analog-signals skill), measured on
+    the filled board as gate 32 measures the RF lines:
+    - ground on the next layer under at least 95 % of each segment, and under each of its parts'
+      pads;
+    - print every stretch over a supply, with the supply's name and the length.
+
+    Not yet run on any board (added 2026-11-04).
 
 Gates 25-32 came from CostasLink rev A's receive chain on the bench (2026-10-29): every check
 rev A had (DRC, ERC, the net and detour checks, the field-solved launches, the gerber parser
 and five reviews) asked whether things were connected and correctly sized; none asked what
 they did together. Only a check that simulates the circuit as laid out sees a stub, a ground
 return or a shared rail.
+
+Also before an order, though not a build gate: the bring-up's test table (each block's inputs,
+outputs, parts and limits, worked out from the netlist) is an order gate, as the first firmware
+is (pcb-bringup skill; AMOD/RF-MOD bring-up planning, 2026-11-15).

@@ -50,6 +50,16 @@ consuming, and they keep falling off when unattended.").
   node whose DC is set through a high resistance needs the coupling cap between it and the
   node, or a series cap of its own.
 
+## Print a test header's names next to the pins they name (ECP5 board A, 2026-11-16)
+
+Signal row next to the names, ground on the far row: see the pcb-silkscreen skill, "Header pins,
+jumpers, test points", for J602 and the rule.
+
+## For the meter, a loop at each end of a series resistor whose drop is a lesson (op-amp, §32, 2026-11-15)
+
+The bias current is 2 mV across the 1 k input resistor; rev A has a loop on the base side only,
+and the other end is a screw head.
+
 ## Tap the node nothing else reaches
 
 GPSDO rev B's first tap per channel was on the input, which a tee at the channel's own SMA

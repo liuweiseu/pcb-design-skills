@@ -1,4 +1,4 @@
-# Bring-up plans and bench case studies (CLAUDE_PCB.md §9, §27)
+# Bring-up plans and bench case studies (CLAUDE_PCB.md §9, §27, §33)
 
 ## A bring-up plan is a table from the DOA list to the stage that retires each risk
 
@@ -84,10 +84,65 @@ with it (GPSDO r45).
   terminated and dropped a test that works.
 - `excluded_from_assembly.csv` answers the question in one grep (GPSDO r45).
 
+## Powering ECP5-2ADC-2DAC board A (2026-11-16)
+
+### USB PROG was dead on arrival
+
+The FT2232H's VPHY and VPLL were on 1.8 V, not 3.3 V, and its D+ and D- were swapped. With no
+JTAG and no UART, nothing on the board could be tested until it was reworked by hand. Both are now
+build-failing scripts (the power-pin and pair-polarity checks: `pcb-workflow`'s verification
+gates 2a-2c) and checks every review brief asks reviewers to redo from the data sheets.
+
+### Write rework as "remove the whole part, wire to ONE named pad", never "lift one end"
+
+The user (2026-11-16): "Try not to tell me to lift something off of one pad. When I use a hot air
+gun and tweezers, the whole thing comes off."
+- **What happened:** the step "lift FB6241's +1V8 end and wire it to +3V3" went wrong.
+  - The whole bead came off and was lost.
+  - The wire then went onto both empty pads, since a bead "has the same DC voltage on both sides".
+  - That tied +3V3 to the FT2232H's 1.8 V core net, whose absolute maximum is 2.0 V, and the
+    board was powered.
+- **The bead's two pads are on two different nets.** The fix changes which net one of them is on,
+  and a written step must say so.
+- **Every rework step names:**
+  - the part to remove whole;
+  - the one pad the wire goes to, by its net and by its neighbour ("the LEFT pad, toward C6241:
+    VPHY");
+  - the pad that must stay bare, with Kapton over it;
+  - a meter check before power: about 0 ohm to where the wire should reach, and not about 0 ohm
+    to the bare pad.
+- **The figure:** mark the bare pad with a red X, not just a circle. Small joints are iron work.
+
+### The first USB plug-in tells a silent device from a broken one
+
+A device whose pull-up is up but whose lines are swapped still makes the host log an attach and
+then enumeration errors. Nothing at all in the kernel log, on any port, means no pull-up: no PHY
+supply, no clock, held in reset, or a cable with no data wires. Read the kernel log
+(`journalctl -k -f`) while the cable goes in.
+
+### A photo cannot show whether a header has a shunt on it
+
+In a slanted photo, a bare 2-pin header's posts look like a shunt. Board A's JP501 was reported as
+shunted and had none. From photos, call a jumper "can't tell: check by eye", and never ask for one
+to be removed on a photo alone. Polarity marks and chip pin-1 dots lie flat and can be read;
+posts, shunts and anything else that stands up cannot.
+
+### The rest of that day
+
+- The dead-but-loaded gateware (nine globals) and how it was bisected: `firmware-gateware-fpga.md`.
+- The bench input's drop, constant-power bucks and the probe walk that ended early:
+  `bench-planning.md`.
+- The test header whose names sat by its ground row: `test-points-and-taps.md`.
+
 ## Symmetric connectors
 
 A 2 x 12 grid solders in turned round as easily as right. Give a meter check after two pins
 are tacked (one contact must read 0 ohms to GND).
+
+For a 2-row connector that follows a standard (Pmod and the like), on a built board before power:
+plug in a bought module and buzz its GND to the board's GND, and its VCC to 3V3 (under 1 ohm).
+How to work out such a connector's geometry before the order is in the `pcb-layout` skill
+("Dual-row headers"; the user, 2026-11-16).
 
 ## Product names
 
